@@ -103,10 +103,10 @@ scfmCropInit = function(sim) {
 
 cacheFunctions <- function(sim) {
   # for slow functions, add cached versions
-  if(params(sim)$cropReprojectLccAge$useCache) {
-    sim$cacheLoc <- file.path(outputPath(sim), "cropReprojectLccAgeCache") 
+  if(params(sim)$scfmCrop$useCache) {
+    sim$cacheLoc <- file.path(outputPath(sim), "scfmCropCache") 
     if(!dir.exists(sim$cacheLoc) )
-      createEmptyRepo(file.path(outputPath(sim), "cropReprojectLccAgeCache"))
+      createEmptyRepo(file.path(outputPath(sim), "scfmCropCache"))
     
     sim$mask <- function(...) {
       archivist::cache(cacheRepo=sim$cacheLoc, FUN=raster::mask, ...)
