@@ -50,7 +50,7 @@ doEvent.scfmLandcoverInit = function(sim, eventTime, eventType, debug=FALSE) {
 ### template initilization
 scfmLandcoverInitInit = function(sim) {
   # these classes are LCC05 specific
-  nonFlammClasses<-c(26,27,28,29)
+  nonFlammClasses<-c(36,37,38,39)
   oldClass <- 0:39
   newClass <- ifelse(oldClass %in% nonFlammClasses,0,1)
   flammableTable <- cbind(oldClass, newClass)
