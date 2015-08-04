@@ -7,6 +7,18 @@ output: html_document
 
 We are creating a set of modules to emulate CONSERV.
 
+```{r}
+saveLazy <- function(..., file) {
+  objs <- list(...)
+  objs[sapply(objs, is.character)] <- sapply(objs[sapply(objs, is.character)], get, simplify=FALSE) 
+  names(objs) <- objs
+  list2env(x = objs) %>%
+    tools:::makeLazyLoadDB(., file)
+  }
+
+
+
+```
 
 ```{r}
 
@@ -15,21 +27,50 @@ library(spatial.tools)
 library(magrittr) #implements pipes as %>%
 library(archivist)
 library(memoise)
+library(raster)
 
-cacheLoc<-file.path("/tmp/cacheSpaDES")
-#archivist::createEmptyRepo(cacheLoc)
 
-foo<-raster("~/Dropbox/Steve-Melina/grid15_lcc05_ascii.txt") %>% setMinMax
+if(!exists("readOGRmem")) readOGRmem <- memoise(readOGR)
+if(!is.memoised("maskmem")) maskmem <- memoise(mask)
+if(!is.memoised("cropmem")) cropmem <- memoise(crop)
+if(!is.memoised("projectRastermem")) projectRastermem <- memoise(projectRaster)
 
-studyArea<-bbox_to_SpatialPolygons(bbox(foo))
-crs(studyArea)<-crs(foo)
-setwd("~/Dropbox/SpaDES/Data")
-vegInput<-raster("LandCoverOfCanada2005_V1_4/LCC2005_V1_4a.tif")
-ageMapInit<-raster("age/age.tif")
 
-#readOGRmem<-memoise(readOGR)
+if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
+    FP = file.path("M:","data", "BEACONs", "BEACONs")
+    if(!file.exists(paste0(FP,".rdb"))) {
+      cacheLoc<-file.path("c:/Eliot/SpadesCache")
+      #archivist::createEmptyRepo(cacheLoc)
+      
+      foo<-raster("~/Dropbox/Steve Eliot shared/grid15_lcc05_ascii.txt") %>% setMinMax
+      studyArea<-bbox_to_SpatialPolygons(bbox(foo))
+      crs(studyArea)<-crs(foo)
+      setwd("M:/data")
+      vegInput<-raster("LandCoverOfCanada2005_V1_4/LCC2005_V1_4a.tif")
+      ageMapInit<-raster("age/age.tif")
+      firePointsInput<-readOGRmem(dsn="Fires/Canadian National Fire Database/NFDB_point",layer="NFDB_point_20141222")
+      saveLazy("vegInput", "ageMapInit", "firePointsInput", "studyArea", file=FP)
+
+    } else {
+      lazyLoad(filebase = FP)
+    }
+
+  } else {
+    cacheLoc<-file.path("/tmp/cacheSpaDES")
+    #archivist::createEmptyRepo(cacheLoc)
+  
+    foo<-raster("~/Dropbox/Steve-Melina/grid15_lcc05_ascii.txt") %>% setMinMax
+    studyArea<-bbox_to_SpatialPolygons(bbox(foo))
+    crs(studyArea)<-crs(foo)
+    setwd("~/Dropbox/SpaDES/Data")
+    vegInput<-raster("LandCoverOfCanada2005_V1_4/LCC2005_V1_4a.tif")
+    ageMapInit<-raster("age/age.tif")
+  firePointsInput<-readOGRmem(dsn="CanadianNationalFireDatabase/NFDB_point/",layer="NFDB_point_20141222")
+  }
+
+
+#readOGR<-memoise(readOGR)
 #Steve: try to imple,emnty with cache for greater persistence
-firePointsInput<-readOGRmem(dsn="CanadianNationalFireDatabase/NFDB_point/",layer="NFDB_point_20141222")
 
 #Plot(foo,new=TRUE)
 #Plot(studyArea,addTo="foo")
@@ -51,20 +92,27 @@ firePointsInput<-readOGRmem(dsn="CanadianNationalFireDatabase/NFDB_point/",layer
 #something is wrong with the args specification. Eliot may fix eventually
 times <- list(start=2005.0, stop=2010, timeunit="year")
 
-plotInit <- NA#times$start+1
+plotInit <- times$start+1
 
 parameters <- list(.globals=list(burnStats="nPixelsBurned"),
                    .progress=list(type=NA, interval=1), #was type="graphical"
                    forestAge=list(startTime=times$start,.plotInitialTime=plotInit),
-                   forestSuccessionBeacons=list(startTime=times$start)
+                   forestSuccessionBeacons=list(startTime=times$start,
+                                                .plotInitialTime=plotInit)
               )
 
 modules <- list("scfmCrop", "scfmLandcoverInit", "forestAge", "forestSuccessionBeacons","LccToBeaconsReclassify")
             
 
-paths <- list(modulePath=file.path("~/Documents/GitHub/SpaDES-Modules/BEACONs"),
+if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
+  paths <- list(modulePath=file.path("~/Documents/GitHub/BEACONs/BEACONs"),
+             inputPath="M:/data",
+             outputPath="c:/temp/SpaDES")
+} else {
+  paths <- list(modulePath=file.path("~/Documents/GitHub/SpaDES-Modules/BEACONs"),
              inputPath="~/Dropbox/SpaDES/Data",
              outputPath="/tmp/SpaDES")
+}
 
 
 objects <- list(vegInput="vegInput", ageMapInit="ageMapInit",firePointsInput="firePointsInput",
