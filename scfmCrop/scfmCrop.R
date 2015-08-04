@@ -17,7 +17,8 @@ defineModule(sim, list(
   citation=list(),
   reqdPkgs=list("raster","rgeos","sp","archivist"),
   parameters=rbind(
-    defineParameter(".plotInitialTime", "numeric", NA_real_, desc="Initial time for plotting"),
+    defineParameter("useCache", "logical", TRUE, NA, NA, desc="Initial time for plotting"),
+    defineParameter(".plotInitialTime", "numeric", NA_real_, NA, NA, desc="Initial time for plotting"),
     defineParameter(".plotInterval", "numeric", NA_real_, desc="Interval between plotting"),
     defineParameter(".saveInitialTime", "numeric", NA_real_, desc="Initial time for saving"),
     defineParameter(".saveInterval", "numeric", NA_real_, desc="Interval between save events")),
@@ -36,7 +37,8 @@ doEvent.scfmCrop = function(sim, eventTime, eventType, debug=FALSE) {
   if (eventType=="init") {
     
     # do stuff for this event
-    sim <- SpaDES::cache(sim$cacheLoc,scfmCropInit,sim=sim)
+    sim <- cacheFunctions(sim)
+    sim <- scfmCropInit(sim)
     # schedule future event(s)
     sim <- scheduleEvent(sim, params(sim)$scfmCrop$.plotInitialTime, "scfmCrop", "plot")
     sim <- scheduleEvent(sim, params(sim)$scfmCrop$.saveInitialTime, "scfmCrop", "save") 
