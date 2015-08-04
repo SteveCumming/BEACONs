@@ -8,6 +8,7 @@ output: html_document
 We are creating a set of modules to emulate CONSERV.
 
 ```{r}
+library(tools)
 saveLazy <- function(..., file) {
   objs <- list(...)
   objs[sapply(objs, is.character)] <- sapply(objs[sapply(objs, is.character)], get, simplify=FALSE) 
@@ -98,10 +99,11 @@ parameters <- list(.globals=list(burnStats="nPixelsBurned"),
                    .progress=list(type=NA, interval=1), #was type="graphical"
                    forestAge=list(startTime=times$start,.plotInitialTime=plotInit),
                    forestSuccessionBeacons=list(startTime=times$start,
-                                                .plotInitialTime=plotInit)
+                                                .plotInitialTime=plotInit),
+                   fireRegimeModel=list(fireCause=c("L"), fireEpoch=c(1985,2014))
               )
 
-modules <- list("scfmCrop", "scfmLandcoverInit", "forestAge", "forestSuccessionBeacons","LccToBeaconsReclassify")
+modules <- list("scfmCrop", "scfmLandcoverInit", "forestAge", "forestSuccessionBeacons","LccToBeaconsReclassify","fireRegimeModel")
             
 
 if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
@@ -115,10 +117,8 @@ if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
 }
 
 
-objects <- list(vegInput="vegInput", ageMapInit="ageMapInit",firePointsInput="firePointsInput",
-                studyArea="studyArea",cacheLoc="cacheLoc")
+objects <- list(vegInput="vegInput", ageMapInit="ageMapInit",firePointsInput="firePointsInput",studyArea="studyArea",cacheLoc="cacheLoc")
 
-mySim <- simInit(times=times, params=parameters, modules=modules, paths=paths,
-                 objects=objects)#, inputs=inputs) 
+mySim <- simInit(times=times, params=parameters, modules=modules,paths=paths, objects=objects)#, inputs=inputs) 
 mySim <- spades(mySim,debug=TRUE)
 ```

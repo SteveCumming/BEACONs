@@ -20,9 +20,9 @@ defineModule(sim, list(
   inputObjects=data.frame(objectName="vegMapLcc",
                           objectClass="RasterLayer",
                           other=NA_character_, stringsAsFactors=FALSE),
-  outputObjects=data.frame(objectName=c("flammable"),
+  outputObjects=data.frame(objectName=c("flammable"), #mapAttr are all things the fir
                            objectClass=c("RasterLayer"),
-                           other=rep(NA_character_, 1L), 
+                           other=rep(NA_character_, 2L), 
                            stringsAsFactors=FALSE)
 ))
 
