@@ -57,7 +57,7 @@ scfmCropInit = function(sim) {
   #Project the study area into each input raster, then crop and mask; 
   #Then project result intpo sim projection.
   
-  browser()
+  #browser()
   
   vegProjection<-crs(sim$vegInput)
   studyAreaTmp <- spTransform(sim$studyArea, CRSobj =vegProjection)
@@ -65,7 +65,8 @@ scfmCropInit = function(sim) {
   crs(sim$vegMapLcc)<-vegProjection
   sim$vegMapLcc<-mask(sim$vegMapLcc,studyAreaTmp) #
   sim$vegMapLcc<-projectRaster(sim$vegMapLcc,crs=simProjection,method="ngb")
-  setColors(sim$vegMapLcc, n=256) <- getColors(sim$vegInput)[[1]] # mask removes colors!
+  tmp<-getColors(sim$vegInput)[[1]] # mask removes colors!
+  setColors(sim$vegMapLcc, n=length(tmp)) <- tmp 
   
   ageProjection<-crs(sim$ageMapInit)
   studyAreaTmp <- spTransform(sim$studyArea, CRSobj =ageProjection)
