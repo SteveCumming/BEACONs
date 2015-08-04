@@ -72,7 +72,7 @@ scfmCropInit = function(sim) {
   sim$ageMapInit <-  crop(sim$ageMapInit, studyAreaTmp)
   crs(sim$ageMapInit)<-ageProjection
   sim$ageMapInit<-mask(sim$ageMapInit,studyAreaTmp)
-  sim$ageMapInit<-projectRaster(sim$ageMapInit,crs=simProjection,method="ngb")
+  sim$ageMapInit<-projectRaster(sim$ageMapInit,to=sim$vegMapLcc,method="ngb")
   
   fireProjection<-CRS(proj4string(sim$firePointsInput))
   studyAreaTmp <- spTransform(sim$studyArea, CRSobj =fireProjection)
