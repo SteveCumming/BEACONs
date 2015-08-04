@@ -60,27 +60,27 @@ scfmCropInit = function(sim) {
   #browser()
   
   vegProjection<-crs(sim$vegInput)
-  studyAreaTmp <- spTransform(sim$studyArea, CRSobj =vegProjection)
-  sim$vegMapLcc <-  crop(sim$vegInput, studyAreaTmp)
+  studyAreaTmp <- sim$spTransform(sim$studyArea, CRSobj =vegProjection)
+  sim$vegMapLcc <-  sim$crop(sim$vegInput, studyAreaTmp)
   crs(sim$vegMapLcc)<-vegProjection
-  sim$vegMapLcc<-mask(sim$vegMapLcc,studyAreaTmp) #
-  sim$vegMapLcc<-projectRaster(sim$vegMapLcc,crs=simProjection,method="ngb")
+  sim$vegMapLcc<-sim$mask(sim$vegMapLcc,studyAreaTmp) #
+  sim$vegMapLcc<-sim$projectRaster(sim$vegMapLcc,crs=simProjection,method="ngb")
   tmp<-getColors(sim$vegInput)[[1]] # mask removes colors!
   setColors(sim$vegMapLcc, n=length(tmp)) <- tmp 
   
   ageProjection<-crs(sim$ageMapInit)
-  studyAreaTmp <- spTransform(sim$studyArea, CRSobj =ageProjection)
-  sim$ageMapInit <-  crop(sim$ageMapInit, studyAreaTmp)
+  studyAreaTmp <- sim$spTransform(sim$studyArea, CRSobj =ageProjection)
+  sim$ageMapInit <-  sim$crop(sim$ageMapInit, studyAreaTmp)
   crs(sim$ageMapInit)<-ageProjection
-  sim$ageMapInit<-mask(sim$ageMapInit,studyAreaTmp)
-  sim$ageMapInit<-projectRaster(sim$ageMapInit,to=sim$vegMapLcc,method="ngb")
+  sim$ageMapInit<-sim$mask(sim$ageMapInit,studyAreaTmp)
+  sim$ageMapInit<-sim$projectRaster(sim$ageMapInit,to=sim$vegMapLcc,method="ngb")
   
   fireProjection<-CRS(proj4string(sim$firePointsInput))
-  studyAreaTmp <- spTransform(sim$studyArea, CRSobj =fireProjection)
+  studyAreaTmp <- sim$spTransform(sim$studyArea, CRSobj =fireProjection)
   sim$firePoints <- sim$firePointsInput[studyAreaTmp,]  #note possibly correct syntax A[B,] rather than A[B]
                                                         #https://cran.r-project.org/web/packages/sp/vignettes/over.pdf page 3
   #crs(sim$firePoints) <- fireProjection
-  sim$firePoints <- spTransform(sim$firePoints,CRSobj =simProjection)
+  sim$firePoints <- sim$spTransform(sim$firePoints,CRSobj =simProjection)
   
   #endCluster()
     
@@ -99,4 +99,32 @@ scfmCropInit = function(sim) {
 
 
 
+cacheFunctions <- function(sim) {
+  # for slow functions, add cached versions
+  if(params(sim)$cropReprojectLccAge$useCache) {
+    sim$cacheLoc <- file.path(outputPath(sim), "cropReprojectLccAgeCache") 
+    if(!dir.exists(sim$cacheLoc) )
+      createEmptyRepo(file.path(outputPath(sim), "cropReprojectLccAgeCache"))
+    
+    sim$mask <- function(...) {
+      archivist::cache(cacheRepo=sim$cacheLoc, FUN=raster::mask, ...)
+    }
+    sim$crop <- function(...) {
+      archivist::cache(cacheRepo=sim$cacheLoc, FUN=raster::crop, ...)
+    }
+    sim$projectRaster <- function(...) {
+      archivist::cache(cacheRepo=sim$cacheLoc, FUN=raster::projectRaster, ...)
+    }
+    sim$spTransform <- function(...) {
+      archivist::cache(cacheRepo=sim$cacheLoc, FUN=sp::spTransform,  ...)
+    }
+  } else {
+    sim$mask <- raster::mask
+    sim$crop <- raster::crop
+    sim$projectRaster <- raster::projectRaster
+    sim$spTransform <- sp::spTransform
+  }
+  
+  return(invisible(sim))
+}
 
