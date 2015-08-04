@@ -99,7 +99,7 @@ forestSuccessionInit <- function(sim) {
 forestSuccessionSuccession <- function(sim) {
   ageMap.v <- round(getValues(sim$ageMap))+1 #assuming ageMap has zeros on it, this increases index to 1
   trajMap.v <- getValues(sim$trajMapBeacons)
-  browser()
+  #browser()
   sim$vegMapBeacons <- setValues(sim$vegMapBeacons,sim$trajObj[cbind(ageMap.v,trajMap.v)])
   return(invisible(sim))
 }
