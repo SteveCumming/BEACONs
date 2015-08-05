@@ -32,10 +32,6 @@ library(raster)
 
 
 if(!exists("readOGRmem")) readOGRmem <- memoise(readOGR)
-if(!is.memoised("maskmem")) maskmem <- memoise(mask)
-if(!is.memoised("cropmem")) cropmem <- memoise(crop)
-if(!is.memoised("projectRastermem")) projectRastermem <- memoise(projectRaster)
-
 
 if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
     FP = file.path("M:","data", "BEACONs", "BEACONs")
@@ -66,7 +62,7 @@ if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
     setwd("~/Dropbox/SpaDES/Data")
     vegInput<-raster("LandCoverOfCanada2005_V1_4/LCC2005_V1_4a.tif")
     ageMapInit<-raster("age/age.tif")
-  firePointsInput<-readOGRmem(dsn="CanadianNationalFireDatabase/NFDB_point/",layer="NFDB_point_20141222")
+    firePointsInput<-readOGRmem(dsn="CanadianNationalFireDatabase/NFDB_point/",layer="NFDB_point_20141222")
   }
 
 
@@ -100,7 +96,7 @@ parameters <- list(.globals=list(burnStats="nPixelsBurned"),
                    forestAge=list(startTime=times$start,.plotInitialTime=plotInit),
                    forestSuccessionBeacons=list(startTime=times$start,
                                                 .plotInitialTime=plotInit),
-                   fireRegimeModel=list(fireCause=c("L"), fireEpoch=c(1985,2014))
+                   fireRegimeModel=list(fireCause=c("L","U"), fireEpoch=c(1985,2014))
               )
 
 modules <- list("scfmCrop", "scfmLandcoverInit", "forestAge", "forestSuccessionBeacons","LccToBeaconsReclassify","fireRegimeModel")

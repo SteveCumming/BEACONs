@@ -59,7 +59,7 @@ scfmCropInit = function(sim) {
   #Project the study area into each input raster, then crop and mask; 
   #Then project result intpo sim projection.
   
-  browser()
+  #browser()
   
   vegProjection<-crs(sim$vegInput)
   studyAreaTmp <- sim$spTransform(sim$studyArea, CRSobj =vegProjection)

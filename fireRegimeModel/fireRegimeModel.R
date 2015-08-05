@@ -14,7 +14,7 @@ defineModule(sim, list(
   parameters=rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur"),
-    defineParameter("fireCause", "character", NA, NA, NA, "subset of c(H,H-PB,L,Re,U)"),
+    defineParameter("fireCause", "character", c("H","U"), NA, NA, "subset of c(H,H-PB,L,Re,U)"),
     defineParameter("fireEpoch", "numeric", c(1961,1990), NA, NA, "start of normal period")
   ),
   inputObjects=data.frame(
@@ -38,7 +38,7 @@ doEvent.fireRegimeModel = function(sim, eventTime, eventType, debug=FALSE) {
     ### check for more detailed object dependencies:
     ### (use `checkObject` or similar)
 
-    genFireMapAttrs(sim)
+    genFireMapAttr(sim)
     
     # do stuff for this event
     fireRegimeModelInit(sim)
@@ -78,7 +78,7 @@ genFireMapAttr<-function(sim){
   #calculate the cell size, total area, and number of flammable cells, etc.
   
    cellSize<-prod(res(sim$flammable))/1e4
-   nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit
+   nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit to agree on  the meaning of "1"
    sim$fireMapAttr<-list(cellSize=cellSize,nFlammable=nFlammable,burnyArea=cellSize*nFlammable)
   
    return(invisible(sim))
@@ -87,7 +87,7 @@ fireRegimeModelInit = function(sim) {
 
   # # ! ----- EDIT BELOW ----- ! #
   
-  browse()
+  browser()
   #subset fires by cause and epoch.   
   tmp<-as.data.frame(sim$firePoints)
  
