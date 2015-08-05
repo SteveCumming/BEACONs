@@ -20,8 +20,8 @@ defineModule(sim, list(
   inputObjects=data.frame(objectName="vegMapLcc",
                           objectClass="RasterLayer",
                           other=NA_character_, stringsAsFactors=FALSE),
-  outputObjects=data.frame(objectName=c("flammable"), #mapAttr are all things the fir
-                           objectClass=c("RasterLayer"),
+  outputObjects=data.frame(objectName=c("flammable", "fireMapAttr"), #mapAttr are all things the fir
+                           objectClass=c("RasterLayer", "list"),
                            other=rep(NA_character_, 2L), 
                            stringsAsFactors=FALSE)
 ))
@@ -47,6 +47,27 @@ doEvent.scfmLandcoverInit = function(sim, eventTime, eventType, debug=FALSE) {
   return(invisible(sim))
 }
 
+genFireMapAttr<-function(sim){
+  
+  #calculate the cell size, total area, and number of flammable cells, etc.
+  browser()
+  cellSize<-prod(res(sim$flammable))/1e4
+  nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit
+  #to agree of the meaning of 1s
+  w<-matrix(c(1,1,1,1,0,1,1,1,1),nrow=3,ncol=3)
+  tmp<- focal(sim$flammable, w, fun = function(x, ...){sum(na.omit(x)==1)})
+  x<-values(tmp)
+  x<-x[values(sim$flammable)==1] #only count neighbours for flammable cells!
+  nv<-table(x,useNA="no")
+  nNbrs<-rep(0,9) #guard against the terrible chance that 
+  #not all nNbrs values are realised. 
+  nNbrs[as.integer(names(nv))+1]<-nv
+  names(nNbrs)<-0:8
+  sim$fireMapAttr<-list(cellSize=cellSize,nFlammable=nFlammable,
+                        burnyArea=cellSize*nFlammable, nNbrs=nNbrs)
+  return(invisible(sim))
+}
+
 ### template initilization
 scfmLandcoverInitInit = function(sim) {
   # these classes are LCC05 specific
@@ -58,5 +79,8 @@ scfmLandcoverInitInit = function(sim) {
   #the count options should cause that "a column with frequencies is added. 
 
   setColors(sim$flammable, n=2) <- c("blue","red")
+  
+  genFireMapAttr(sim)
+  
   return(invisible(sim))
 }

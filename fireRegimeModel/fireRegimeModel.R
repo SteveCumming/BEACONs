@@ -18,14 +18,14 @@ defineModule(sim, list(
     defineParameter("fireEpoch", "numeric", c(1961,1990), NA, NA, "start of normal period")
   ),
   inputObjects=data.frame(
-    objectName=c("firePoints","flammable"), 
-    objectClass=c("SpatialPointsDataFrame", "RasterLayer"),
-    other=rep(NA_character_,2),
+    objectName=c("firePoints","flammable","fireMapAttr"), 
+    objectClass=c("SpatialPointsDataFrame", "RasterLayer", "list"),
+    other=rep(NA_character_,3),
     stringsAsFactors=FALSE),
   outputObjects=data.frame(
-    objectName=c("fireRegimeParameters","fireMapAttr"),
-    objectClass=c("list", "list"),
-    other=rep(NA_character_,2),
+    objectName=c("fireRegimeParameters"),
+    objectClass=c("list"),
+    other=rep(NA_character_,1),
     stringsAsFactors=FALSE)
 ))
 
@@ -73,21 +73,12 @@ doEvent.fireRegimeModel = function(sim, eventTime, eventType, debug=FALSE) {
 
 ### template initilization
 
-genFireMapAttr<-function(sim){
-  
-  #calculate the cell size, total area, and number of flammable cells, etc.
-  
-   cellSize<-prod(res(sim$flammable))/1e4
-   nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit to agree on  the meaning of "1"
-   sim$fireMapAttr<-list(cellSize=cellSize,nFlammable=nFlammable,burnyArea=cellSize*nFlammable)
-  
-   return(invisible(sim))
-}
+
 fireRegimeModelInit = function(sim) {
 
   # # ! ----- EDIT BELOW ----- ! #
   
-  browser()
+  #browser()
   #subset fires by cause and epoch.   
   tmp<-as.data.frame(sim$firePoints)
  
