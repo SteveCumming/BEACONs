@@ -13,10 +13,12 @@ defineModule(sim, list(
   citation=list(),
   reqdPkgs=list("raster"),
   parameters=rbind(
-    defineParameter(".plotInitialTime", "numeric", NA_real_, desc="Initial time for plotting"),
-    defineParameter(".plotInterval", "numeric", NA_real_, desc="Interval between plotting"),
-    defineParameter(".saveInitialTime", "numeric", NA_real_, desc="Initial time for saving"),
-    defineParameter(".saveInterval", "numeric", NA_real_, desc="Interval between save events")),
+    defineParameter(".plotInitialTime", "numeric", NA_real_, NA, NA, desc="Initial time for plotting"),
+    defineParameter(".plotInterval", "numeric", NA_real_, NA, NA, desc="Interval between plotting"),
+    defineParameter(".saveInitialTime", "numeric", NA_real_,  NA, NA, desc="Initial time for saving"),
+    defineParameter(".saveInterval", "numeric", NA_real_, NA, NA, desc="Interval between save events"),
+    defineParameter("useCache", "logical", TRUE, NA, NA, desc="Use cache")
+    ),
   inputObjects=data.frame(objectName="vegMapLcc",
                           objectClass="RasterLayer",
                           other=NA_character_, stringsAsFactors=FALSE),
@@ -28,6 +30,8 @@ defineModule(sim, list(
 
 doEvent.scfmLandcoverInit = function(sim, eventTime, eventType, debug=FALSE) {
   if (eventType=="init") {
+    
+    sim <- scfmLandcoverInitCacheFunctions(sim)
     sim <- scfmLandcoverInitInit(sim)
     sim <- scheduleEvent(sim, params(sim)$scfmLandcoverInit$.plotInitialTime,
                          "scfmLandcoverInit", "plot")
@@ -50,12 +54,15 @@ doEvent.scfmLandcoverInit = function(sim, eventTime, eventType, debug=FALSE) {
 genFireMapAttr<-function(sim){
   
   #calculate the cell size, total area, and number of flammable cells, etc.
-  browser()
+  #browser()
+  
+ 
   cellSize<-prod(res(sim$flammable))/1e4
   nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit
   #to agree of the meaning of 1s
   w<-matrix(c(1,1,1,1,0,1,1,1,1),nrow=3,ncol=3)
-  tmp<- focal(sim$flammable, w, fun = function(x, ...){sum(na.omit(x)==1)})
+  browser()
+  tmp<- sim$focal(sim$flammable, w, fun = function(x, ...){sum(na.omit(x)==1)})
   x<-values(tmp)
   x<-x[values(sim$flammable)==1] #only count neighbours for flammable cells!
   nv<-table(x,useNA="no")
@@ -81,6 +88,23 @@ scfmLandcoverInitInit = function(sim) {
   setColors(sim$flammable, n=2) <- c("blue","red")
   
   genFireMapAttr(sim)
+  
+  return(invisible(sim))
+}
+
+scfmLandcoverInitCacheFunctions <- function(sim) {
+  # for slow functions, add cached versions
+  if(params(sim)$scfmLandcoverInit$useCache) {
+    sim$cacheLoc <- file.path(outputPath(sim), "scfmLandcoverInitCache") 
+    if(!dir.exists(sim$cacheLoc) )
+      createEmptyRepo(file.path(outputPath(sim), "scfmLandcoverInitCache"))
+    
+    sim$focal <- function(...) {
+      archivist::cache(cacheRepo=sim$cacheLoc, FUN=raster::focal, ...)
+    }
+  } else {
+    sim$focal <- raster::focal
+  }
   
   return(invisible(sim))
 }
