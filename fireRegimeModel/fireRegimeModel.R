@@ -37,10 +37,10 @@ doEvent.fireRegimeModel = function(sim, eventTime, eventType, debug=FALSE) {
   if (eventType=="init") {
     ### check for more detailed object dependencies:
     ### (use `checkObject` or similar)
-
-    genFireMapAttr(sim)
     
     # do stuff for this event
+    
+    #genFireMapAttr() now called in scfmLandcoverInit.R
     fireRegimeModelInit(sim)
 
     # schedule future event(s)
@@ -76,9 +76,11 @@ doEvent.fireRegimeModel = function(sim, eventTime, eventType, debug=FALSE) {
 
 fireRegimeModelInit = function(sim) {
 
-  # # ! ----- EDIT BELOW ----- ! #
-  
   #browser()
+ 
+  source(paste(paths$modulePath,"TEutilsNew.R",sep="/"),local=TRUE,echo=FALSE)
+  
+  
   #subset fires by cause and epoch.   
   tmp<-as.data.frame(sim$firePoints)
  
@@ -97,12 +99,23 @@ fireRegimeModelInit = function(sim) {
   nFires<-dim(tmp)[1]
   epochLength<-epoch[2]-epoch[1]+1  
   rate<-nFires/(epochLength * sim$fireMapAttr$burnyArea)
-  pEscape<-sum(tmp$SIZE_HA > sim$fireMapAttr$cellSize)/nFires
-  xBar<-mean(tmp$SIZE_HA[tmp$SIZE_HA>sim$fireMapAttr$cellSize])
-  sim$fireRegimeParamaters<=list(rate=rate, pEscape=pEscape,xBar=xBar)
-    
-  # ! ----- STOP EDITING ----- ! #
 
+  #calculate escaped fires 
+  xVec<-tmp$SIZE_HA[tmp$SIZE_HA > sim$fireMapAttr$cellSize]
+  pEscape<-length(xVec)/nFires
+  xBar<-mean(xVec)
+  xMax<-max(xVec)
+  
+  zVec<-log(xVec/sim$fireMapAttr$cellSize)
+  if (length(zVec)<100)
+    warning("Less than 100 \"large\" fires. That estimates may be unstable.\nConsider using a larger area and/or longer epoch.")
+
+  hdList<-HannonDayiha(zVec)
+  maxFireSize<-exp(hdList$That) * sim$fireMapAttr$cellSize  
+  
+  sim$fireRegimeParameters<=list(ignitionRate=rate, pEscape=pEscape, 
+                                 xBar=xBar, xMax=xMax, meanBigFireSize=mean(xVec[xVec>200]),
+                                 emfs=maxFireSize)
   return(invisible(sim))
 }
 
@@ -136,15 +149,4 @@ fireRegimeModelEvent1 = function(sim) {
   return(invisible(sim))
 }
 
-### template for your event2
-fireRegimeModelEvent2 = function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-
-
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
-
-### add additional events as needed by copy/pasting from above
 

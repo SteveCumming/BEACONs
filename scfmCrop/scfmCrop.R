@@ -17,11 +17,11 @@ defineModule(sim, list(
   citation=list(),
   reqdPkgs=list("raster","rgeos","sp","archivist"),
   parameters=rbind(
-    defineParameter("useCache", "logical", TRUE, NA, NA, desc="Initial time for plotting"),
+    defineParameter("useCache", "logical", TRUE, NA, NA, desc="Use cache or not."),
     defineParameter(".plotInitialTime", "numeric", NA_real_, NA, NA, desc="Initial time for plotting"),
-    defineParameter(".plotInterval", "numeric", NA_real_, desc="Interval between plotting"),
-    defineParameter(".saveInitialTime", "numeric", NA_real_, desc="Initial time for saving"),
-    defineParameter(".saveInterval", "numeric", NA_real_, desc="Interval between save events")),
+    defineParameter(".plotInterval", "numeric", NA_real_, NA, NA, desc="Interval between plotting"),
+    defineParameter(".saveInitialTime", "numeric", NA_real_, NA, NA, desc="Initial time for saving"),
+    defineParameter(".saveInterval", "numeric", NA_real_, NA, NA, desc="Interval between save events")),
   inputObjects=data.frame(objectName=c("vegInput", "ageMapInit", "studyArea","firePointsInput","cacheLoc"),
                           objectClass=c("RasterLayer", "RasterLayer", "SpatialPolygons","SpatialPoints", "character"),
                           other=rep(NA_character_, 5L), stringsAsFactors=FALSE),
@@ -35,9 +35,8 @@ defineModule(sim, list(
 
 doEvent.scfmCrop = function(sim, eventTime, eventType, debug=FALSE) {
   if (eventType=="init") {
-    
     # do stuff for this event
-    sim <- cacheFunctions(sim)
+    sim <- scfmCropCacheFunctions(sim)
     sim <- scfmCropInit(sim)
     # schedule future event(s)
     sim <- scheduleEvent(sim, params(sim)$scfmCrop$.plotInitialTime, "scfmCrop", "plot")
@@ -50,8 +49,8 @@ doEvent.scfmCrop = function(sim, eventTime, eventType, debug=FALSE) {
 }
 
 ### template initilization
-scfmCropInit = function(sim) {
-  
+scfmCropInit <- function(sim) {
+
   simProjection<-crs(sim$studyArea)  #this would probably be set to be the same as the veg map at an earlier stage.
   
   #if(ncell(sim$vegMap)>5e5) beginCluster(min(parallel::detectCores(),6))
@@ -60,7 +59,7 @@ scfmCropInit = function(sim) {
   #Then project result intpo sim projection.
   
   #browser()
-  
+
   vegProjection<-crs(sim$vegInput)
   studyAreaTmp <- sim$spTransform(sim$studyArea, CRSobj =vegProjection)
   sim$vegMapLcc <-  sim$crop(sim$vegInput, studyAreaTmp)
@@ -100,11 +99,11 @@ scfmCropInit = function(sim) {
 }
 
 
-
-cacheFunctions <- function(sim) {
+scfmCropCacheFunctions <- function(sim) {
   # for slow functions, add cached versions
   if(params(sim)$scfmCrop$useCache) {
     sim$cacheLoc <- file.path(outputPath(sim), "scfmCropCache") 
+    
     if(!dir.exists(sim$cacheLoc) )
       createEmptyRepo(file.path(outputPath(sim), "scfmCropCache"))
     
@@ -125,8 +124,8 @@ cacheFunctions <- function(sim) {
     sim$crop <- raster::crop
     sim$projectRaster <- raster::projectRaster
     sim$spTransform <- sp::spTransform
+    
   }
   
   return(invisible(sim))
 }
-
