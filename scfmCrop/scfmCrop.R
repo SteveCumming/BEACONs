@@ -6,6 +6,7 @@ defineModule(sim, list(
   specifed extent. Selects or subsets all spatialised data e.g. fires.
   Uswa cropped RasterLayer, defined by a spatial polygon that defines the area of interest.",
   keywords=c("translator", "lcc05", "Land Cover Classification", "vegetation","Canadian National Fire Database"),
+  childModules=character(),
   authors=c(person("Steve", "Cumming", email="stevec@sbf.ulaval.ca", role=c("aut")),
             person(c("Eliot", "J","B"), "McIntire", email="emcintir@nrcan.gc.ca", role=c("aut")),
             person("Pierre", "Vernier", email="pierre.vernier@gmail.com")
