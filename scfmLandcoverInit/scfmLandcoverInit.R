@@ -4,6 +4,7 @@ defineModule(sim, list(
   name="scfmLandcoverInit",
   description="Takes the LCC05 classification of 39 land cover classes, and reclassifies it to flammable and inflammable [1,0]",
   keywords=c("fire", "LCC05", "land cover classification 2005", "BEACONs"),
+  childModules=character(),
   authors=c(person(c("Eliot", "J", "B"), "McIntire", email="Eliot.McIntire@NRCan.gc.ca", role=c("aut", "cre")),
             person("Steve", "Cumming", email="stevec@sbf.ulaval.ca", role=c("aut"))),
   version=numeric_version("0.1.0"),
@@ -58,7 +59,6 @@ genFireMapAttr<-function(sim){
   nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit
   #to agree of the meaning of 1s
   w<-matrix(c(1,1,1,1,0,1,1,1,1),nrow=3,ncol=3)
-  browser()
   #it would be nice to somehow get caching to work on the function argument of focal
   #but I have not been able to make it work.
   tmp<- focal(sim$flammable, w, na.rm=TRUE) #default function is sum(...,na.rm)
