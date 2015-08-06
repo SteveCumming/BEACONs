@@ -1,23 +1,27 @@
 
 defineModule(sim, list(
   name="disturbanceDriver",
-  description="insert module description here",
-  keywords=c("insert key words here"),
-  authors=c(person(c("First", "Middle"), "Last", email="email@example.com", role=c("aut", "cre"))),
+  description="generate parameters for the generic percolation model",# spades::spread()",
+  keywords=c("fire"),
+  authors=c(person(c("Steve", "G"), "Cumming", email="stevec@sbf.ulaval.ca", role=c("aut", "cre"))),
   childModules=character(),
-  version=numeric_version("0.0.0"),
+  version=numeric_version("0.1.0"),
   spatialExtent=raster::extent(rep(NA_real_, 4)),
   timeframe=as.POSIXlt(c(NA, NA)),
-  timeunit=NA_character_, # e.g., "year"
+  timeunit="year", 
   citation=list(),
   reqdPkgs=list(),
   parameters=rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur")),
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
-  inputObjects=data.frame(objectName=NA_character_, objectClass=NA_character_, other=NA_character_, stringsAsFactors=FALSE),
-  outputObjects=data.frame(objectName=NA_character_, objectClass=NA_character_, other=NA_character_, stringsAsFactors=FALSE)
+  inputObjects=data.frame(objectName=c("spreadCalibrationData","fireRegimeParameters"), objectClass=c("data.frame","list"), other=re2(NA_character_,2), stringsAsFactors=FALSE),
+  outputObjects=data.frame(objectName=c("spreadParameters"),
+                          objectClass=c("list"),
+                          other=NA_character_, stringsAsFactors=FALSE)
 ))
+
+
 
 ## event types
 #   - type `init` is required for initiliazation
@@ -62,32 +66,18 @@ doEvent.disturbanceDriver = function(sim, eventTime, eventType, debug=FALSE) {
 disturbanceDriverInit = function(sim) {
 
   
-  
-  FC <- read.csv(curvesData, as.is=T)
-  predictSpread <- function (fireSize = MFS, landSize=2000, minFireSize=2) {
-    lfs <- log(fireSize)
-    m <- glm(FC$pjmp ~ log(FC[,paste("ls",landSize,"fs",minFireSize,sep="")]))
-    p <- m$coef[1] + m$coef[2] * lfs
-    return(p[1])
-  }
-  
-  # Calculate mean size of escaped fires in cells
-  MFS <- mean(escapedFires$SIZE_HA) / cellarea
-  
-  # e.g., landSize=200 corresponds to 40,000 cells
-  studyAreaCells <- studyArea / cellarea
-  if (sqrt(studyAreaCells) <= 350) {LS <- 200}
-  if (sqrt(studyAreaCells) > 350 & sqrt(studyAreaCells) <= 750) {LS <- 500}
-  if (sqrt(studyAreaCells) > 750 & sqrt(studyAreaCells) <= 1500) {LS <- 1000}
-  if (sqrt(studyAreaCells) > 1500) {LS <- 2000}
-  PS <- predictSpread(fireSize=MFS, landSize=LS)
-  
-  
-  # # ! ----- EDIT BELOW ----- ! #
-
-
-
-  # ! ----- STOP EDITING ----- ! #
+  #this table contains calibration data for several landscape sizes
+  #and several min fire sizes (1 or 2 cells), organised by collumn.
+  #The data were made by Steve Cumming in June 2013 for a whole other purpose.
+  #I chose the one that seems most appropriate to me
+  browser()
+  y<-log(sim$spreadCalibrationData[,paste("ls",1e3,"fs",2,sep="")])
+  x<-sim$spreadCalibrationData$pjmp
+  m.glm<-glm(x~I(log(y)))
+  mfs<-sim$fireRegimeParameters$xBar/sim$fireRegimeParameters$cellSize #mean size escaped fires in cells
+  pJmp<-sum(m.glm$coeff*c(1,log(mfs)))
+ 
+  spreadParameters<-list(pJmp=pJmp)
 
   return(invisible(sim))
 }
@@ -122,15 +112,6 @@ disturbanceDriverEvent1 = function(sim) {
   return(invisible(sim))
 }
 
-### template for your event2
-disturbanceDriverEvent2 = function(sim) {
-  # ! ----- EDIT BELOW ----- ! #
-
-
-
-  # ! ----- STOP EDITING ----- ! #
-  return(invisible(sim))
-}
 
 ### add additional events as needed by copy/pasting from above
 

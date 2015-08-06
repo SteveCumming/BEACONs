@@ -11,7 +11,7 @@ We are creating a set of modules to emulate CONSERV.
 library(tools)
 saveLazy <- function(..., file) {
   objs <- list(...)
-  objs[sapply(objs, is.character)] <- sapply(objs[sapply(objs, is.character)], get, simplify=FALSE) 
+  objs[sapply(objs, is.character)] <- sapply(objs[sapply(objs, is.character)], get, simplify=FALSE)
   names(objs) <- objs
   list2env(x = objs) %>%
     tools:::makeLazyLoadDB(., file)
@@ -80,12 +80,13 @@ if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
 
 ```{r echo=FALSE}
  inputs <- data.frame(file=c("LandCoverOfCanada2005_V1_4/LCC2005_V1_4a.tif",
-                              "age/age.tif"),#,
+                              "age/age.tif",
+                              "spread_firesize_curves.csv"),#,
                               #""),
                         #fun=c("raster","raster"),#,"readOGR"),
                         #package=c("raster","raster"),#,"rgdal"),
                         #args=I(list(list(""),list(""),list(dsn="CanadianNationalFireDatabase/NFDB_point/",layer="NFDB_point_20141222"))),
-                        objectName=c("vegInput", "ageMapInit"),#, "firePointsInput"),
+                        objectName=c("vegInput", "ageMapInit","spreadCalibrationData"),#, "firePointsInput"),
                         stringsAsFactors=FALSE)
 
 #something is wrong with the args specification. Eliot may fix eventually
@@ -104,7 +105,7 @@ parameters <- list(.globals=list(burnStats="nPixelsBurned"),
                    scfmLandcoverInit=list(useCache=TRUE)
               )
 
-modules <- list("scfmCrop", "scfmLandcoverInit", "forestAge", "forestSuccessionBeacons","LccToBeaconsReclassify","fireRegimeModel")
+modules <- list("scfmCrop", "scfmLandcoverInit", "forestAge", "forestSuccessionBeacons","LccToBeaconsReclassify","fireRegimeModel","disturbanceDriver")
             
 
 if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
@@ -122,6 +123,7 @@ objects <- list(#vegInput="vegInput", ageMapInit="ageMapInit",
                 firePointsInput="firePointsInput",
                 studyArea="studyArea",cacheLoc="cacheLoc")
 
+savedir<-setwd("~/Dropbox/SpaDES/Data")
 mySim <- simInit(times=times, params=parameters, modules=modules,paths=paths, objects=objects, inputs=inputs) 
-system.time(tmpSim<- spades(mySim,debug=TRUE))
+tmpSim<- spades(mySim,debug=TRUE)
 ```
