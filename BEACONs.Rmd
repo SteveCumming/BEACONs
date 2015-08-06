@@ -118,6 +118,8 @@ if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
 
 objects <- list(vegInput="vegInput", ageMapInit="ageMapInit",firePointsInput="firePointsInput",studyArea="studyArea",cacheLoc="cacheLoc")
 
-mySim <- simInit(times=times, params=parameters, modules=modules,paths=paths, objects=objects)#, inputs=inputs) 
+mySim <- simInit(times=times, params=parameters, modules=modules,paths=paths, objects=objects)
+#See inputs in the vignettes to load and make availavle the calibration file/
+#, inputs=inputs) 
 tmpSim<- spades(mySim,debug=TRUE)
 ```

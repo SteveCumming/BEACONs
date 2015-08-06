@@ -52,11 +52,8 @@ doEvent.scfmLandcoverInit = function(sim, eventTime, eventType, debug=FALSE) {
 }
 
 genFireMapAttr<-function(sim){
-  
   #calculate the cell size, total area, and number of flammable cells, etc.
   #browser()
-  
- 
   cellSize<-prod(res(sim$flammable))/1e4
   nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit
   #to agree of the meaning of 1s
@@ -64,7 +61,7 @@ genFireMapAttr<-function(sim){
   browser()
   #it would be nice to somehow get caching to work on the function argument of focal
   #but I have not been able to make it work.
-  tmp<- sim$focal(sim$flammable, w, fun = function(x)sum(na.omit(x)==1)) #sim$Frabjous)
+  tmp<- focal(sim$flammable, w, na.rm=TRUE) #default function is sum(...,na.rm)
   x<-values(tmp)
   x<-x[values(sim$flammable)==1] #only count neighbours for flammable cells!
   nv<-table(x,useNA="no")
