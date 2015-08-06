@@ -4,6 +4,7 @@ defineModule(sim, list(
   name="scfmLandcoverInit",
   description="Takes the LCC05 classification of 39 land cover classes, and reclassifies it to flammable and inflammable [1,0]",
   keywords=c("fire", "LCC05", "land cover classification 2005", "BEACONs"),
+  childModules=character(),
   authors=c(person(c("Eliot", "J", "B"), "McIntire", email="Eliot.McIntire@NRCan.gc.ca", role=c("aut", "cre")),
             person("Steve", "Cumming", email="stevec@sbf.ulaval.ca", role=c("aut"))),
   version=numeric_version("0.1.0"),
@@ -61,8 +62,7 @@ genFireMapAttr<-function(sim){
   nFlammable<-table(values(sim$flammable), useNA="no")["1"] #depends on sfcmLandCoverInit
   #to agree of the meaning of 1s
   w<-matrix(c(1,1,1,1,0,1,1,1,1),nrow=3,ncol=3)
-  browser()
-  tmp<- sim$focal(sim$flammable, w, fun = function(x, ...){sum(na.omit(x)==1)})
+  tmp<- focal(sim$flammable, w, na.rm=TRUE)
   x<-values(tmp)
   x<-x[values(sim$flammable)==1] #only count neighbours for flammable cells!
   nv<-table(x,useNA="no")
