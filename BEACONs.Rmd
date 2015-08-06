@@ -34,8 +34,8 @@ library(raster)
 if(!exists("readOGRmem")) readOGRmem <- memoise(readOGR)
 
 if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
-    FP = file.path("M:","data", "BEACONs", "BEACONs")
-    if(!file.exists(paste0(FP,".rdb"))) {
+#    FP = file.path("M:","data", "BEACONs", "BEACONs")
+#    if(!file.exists(paste0(FP,".rdb"))) {
       cacheLoc<-file.path("c:/Eliot/SpadesCache")
       #archivist::createEmptyRepo(cacheLoc)
       
@@ -47,10 +47,10 @@ if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
       ageMapInit<-raster("age/age.tif")
       firePointsInput<-readOGRmem(dsn="Fires/Canadian National Fire Database/NFDB_point",layer="NFDB_point_20141222")
       saveLazy("vegInput", "ageMapInit", "firePointsInput", "studyArea", file=FP)
-      setwd(savedir)
-    } else {
-      lazyLoad(filebase = FP)
-    }
+#      setwd(savedir)
+#    } else {
+#      lazyLoad(filebase = FP)
+#    }
 
   } else {
     cacheLoc<-file.path("/tmp/cacheSpaDES")
@@ -79,18 +79,20 @@ if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
 ```
 
 ```{r echo=FALSE}
-# inputs <- data.frame(files=c("LandCoverOfCanada2005_V1_4/LCC2005_V1_4a.tif",
-#                              "age/age.tif",
-#                              ""),
-#                        functions=c("raster","raster","readOGR"),
-#                        packages=c("raster","raster","rgdal"),
-#                        args=I(list(list(""),list(""),list(dsn="CanadianNationalFireDatabase/NFDB_point/",layer="NFDB_point_20141222"))),
-#                        objectNames=c("vegInput", "ageInput", "firePointsInput"),
-#                        stringsAsFactors=FALSE)
+ inputs <- data.frame(file=c("LandCoverOfCanada2005_V1_4/LCC2005_V1_4a.tif",
+                              "age/age.tif"),#,
+                              #""),
+                        #fun=c("raster","raster"),#,"readOGR"),
+                        #package=c("raster","raster"),#,"rgdal"),
+                        #args=I(list(list(""),list(""),list(dsn="CanadianNationalFireDatabase/NFDB_point/",layer="NFDB_point_20141222"))),
+                        objectName=c("vegInput", "ageMapInit"),#, "firePointsInput"),
+                        stringsAsFactors=FALSE)
+
 #something is wrong with the args specification. Eliot may fix eventually
+
 times <- list(start=2005.0, stop=2010, timeunit="year")
 
-plotInit <- times$start+1
+plotInit <- NA#times$start+1
 
 parameters <- list(.globals=list(burnStats="nPixelsBurned"),
                    .progress=list(type=NA, interval=1), #was type="graphical"
@@ -116,8 +118,10 @@ if(Sys.getenv("ComputerName")=="W-VIC-A105200") {
 }
 
 
-objects <- list(vegInput="vegInput", ageMapInit="ageMapInit",firePointsInput="firePointsInput",studyArea="studyArea",cacheLoc="cacheLoc")
+objects <- list(#vegInput="vegInput", ageMapInit="ageMapInit",
+                firePointsInput="firePointsInput",
+                studyArea="studyArea",cacheLoc="cacheLoc")
 
-mySim <- simInit(times=times, params=parameters, modules=modules,paths=paths, objects=objects)#, inputs=inputs) 
-tmpSim<- spades(mySim,debug=TRUE)
+mySim <- simInit(times=times, params=parameters, modules=modules,paths=paths, objects=objects, inputs=inputs) 
+system.time(tmpSim<- spades(mySim,debug=TRUE))
 ```
