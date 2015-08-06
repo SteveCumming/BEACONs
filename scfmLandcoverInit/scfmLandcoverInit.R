@@ -62,7 +62,9 @@ genFireMapAttr<-function(sim){
   #to agree of the meaning of 1s
   w<-matrix(c(1,1,1,1,0,1,1,1,1),nrow=3,ncol=3)
   browser()
-  tmp<- sim$focal(sim$flammable, w, fun = function(x, ...){sum(na.omit(x)==1)})
+  #it would be nice to somehow get caching to work on the function argument of focal
+  #but I have not been able to make it work.
+  tmp<- sim$focal(sim$flammable, w, fun = function(x)sum(na.omit(x)==1)) #sim$Frabjous)
   x<-values(tmp)
   x<-x[values(sim$flammable)==1] #only count neighbours for flammable cells!
   nv<-table(x,useNA="no")
@@ -87,9 +89,13 @@ scfmLandcoverInitInit = function(sim) {
 
   setColors(sim$flammable, n=2) <- c("blue","red")
   
-  genFireMapAttr(sim)
+  sim<-genFireMapAttr(sim)
   
   return(invisible(sim))
+}
+
+testFun<-function(x) {
+  sum(na.omit(x)==1)
 }
 
 scfmLandcoverInitCacheFunctions <- function(sim) {
@@ -102,7 +108,13 @@ scfmLandcoverInitCacheFunctions <- function(sim) {
     sim$focal <- function(...) {
       archivist::cache(cacheRepo=sim$cacheLoc, FUN=raster::focal, ...)
     }
+    
+    sim$Frabjous <-function(...){
+      archivist::cache(cacheRepo=sim$cacheLoc, FUN=sim$testFun, ...)
+    }
+    
   } else {
+    sim$Frabjous <- function(x){sum(na.omit(x)==1)}
     sim$focal <- raster::focal
   }
   
