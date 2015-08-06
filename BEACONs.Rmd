@@ -124,6 +124,7 @@ objects <- list(#vegInput="vegInput", ageMapInit="ageMapInit",
                 studyArea="studyArea",cacheLoc="cacheLoc")
 
 savedir<-setwd("~/Dropbox/SpaDES/Data")
+try(rm(mySim))
 mySim <- simInit(times=times, params=parameters, modules=modules,paths=paths, objects=objects, inputs=inputs) 
 tmpSim<- spades(mySim,debug=TRUE)
-```
+sim```

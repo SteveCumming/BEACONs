@@ -113,7 +113,7 @@ fireRegimeModelInit = function(sim) {
   hdList<-HannonDayiha(zVec)
   maxFireSize<-exp(hdList$That) * sim$fireMapAttr$cellSize  
   
-  sim$fireRegimeParameters<=list(ignitionRate=rate, pEscape=pEscape, 
+  sim$fireRegimeParameters<-list(ignitionRate=rate, pEscape=pEscape, 
                                  xBar=xBar, xMax=xMax, meanBigFireSize=mean(xVec[xVec>200]),
                                  emfs=maxFireSize)
   return(invisible(sim))

@@ -10,12 +10,14 @@ defineModule(sim, list(
   timeframe=as.POSIXlt(c(NA, NA)),
   timeunit="year", 
   citation=list(),
-  reqdPkgs=list(),
+  reqdPkgs=list("stats"),
   parameters=rbind(
     defineParameter(".plotInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first plot event should occur"),
     defineParameter(".saveInitialTime", "numeric", NA, NA, NA, "This describes the simulation time at which the first save event should occur")),
     #defineParameter("paramName", "paramClass", value, min, max, "parameter description")),
-  inputObjects=data.frame(objectName=c("spreadCalibrationData","fireRegimeParameters"), objectClass=c("data.frame","list"), other=re2(NA_character_,2), stringsAsFactors=FALSE),
+  inputObjects=data.frame(objectName=c("spreadCalibrationData","fireRegimeParameters","fireMapAttr"),
+                          objectClass=c("data.frame","list","list"), other=rep(NA_character_,3), stringsAsFactors=FALSE),
+  #inputObjects=data.frame(objectName=c("fireRegimeParameters","spreadCalibrationData"), objectClass=c("list","data.frame"), other=rep(NA_character_,2), stringsAsFactors=FALSE),
   outputObjects=data.frame(objectName=c("spreadParameters"),
                           objectClass=c("list"),
                           other=NA_character_, stringsAsFactors=FALSE)
@@ -63,21 +65,48 @@ doEvent.disturbanceDriver = function(sim, eventTime, eventType, debug=FALSE) {
 #   - keep event functions short and clean, modularize by calling subroutines from section below.
 
 ### template initilization
+
+
+# 1 - (1-p0)**N = pEscape
+# 1 - pEscape = (1-p0)**N
+# (1 - pEscape)**1/N = 1 - p0
+# p0 = 1 - (1 - pEscape)**1/N
+
+
+
+
 disturbanceDriverInit = function(sim) {
 
+
+  hatP0<-function(pEscape,n=8){
+    1 - (1-pEscape)**(1/n)
+  }
+  
+  #a real clever boots would minimise the abs log odds ratio. 
+  #be my guest.
+  
+  escapeProbDelta<-function(p0,w,hatPE){
+    abs(sum(w*(1-(1-p0)**(0:8)))-hatPE)  
+  }
   
   #this table contains calibration data for several landscape sizes
   #and several min fire sizes (1 or 2 cells), organised by collumn.
   #The data were made by Steve Cumming in June 2013 for a whole other purpose.
   #I chose the one that seems most appropriate to me
-  browser()
+  #browser()
   y<-log(sim$spreadCalibrationData[,paste("ls",1e3,"fs",2,sep="")])
   x<-sim$spreadCalibrationData$pjmp
   m.glm<-glm(x~I(log(y)))
-  mfs<-sim$fireRegimeParameters$xBar/sim$fireRegimeParameters$cellSize #mean size escaped fires in cells
+  mfs<-sim$fireRegimeParameters$xBar/sim$fireMapAttr$cellSize #mean size escaped fires in cells
   pJmp<-sum(m.glm$coeff*c(1,log(mfs)))
+  
+  w<-sim$fireMapAttr$nNbrs
+  w<-w/sum(w)
+  hatPE<-sim$fireRegimeParameters$pEscape
+  foo<-optimise(escapeProbDelta,interval=c(hatP0(hatPE,8),hatP0(hatPE,floor(sum(w*0:8)))),tol=1e6,w=w,hatPE=hatPE)
+  
  
-  spreadParameters<-list(pJmp=pJmp)
+  spreadParameters<-list(pJmp=pJmp,p0=foo$minimum,naiveP0=hatP0(sim$fireRegimeParameters$pEscape,8))
 
   return(invisible(sim))
 }
